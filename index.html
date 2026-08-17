@@ -26,7 +26,7 @@
                 <i class="fa-solid fa-cart-shopping"></i> Grocery Budget Tracker
             </h1>
             <p class="text-sm text-gray-500">I-track ang iyong gastusin at i-snap ang mga price tag!</p>
-			<p class="text-sm text-gray-500">Coded by: Erwin R. Alincastre, RN</p>
+			<p class="text-sm text-gray-500">Coded by : Erwin R. Alincastre</p>
             
             <!-- Reset Button -->
             <button onclick="clearAllData()" class="mt-4 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-full font-medium transition-colors cursor-pointer">
@@ -59,14 +59,23 @@
 
         <!-- Add Item Form -->
         <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                    <i class="fa-solid fa-circle-plus text-emerald-600"></i> Magdagdag ng Item
-                </h2>
-                <!-- Voice Assistant Button -->
-                <button type="button" onclick="startVoiceInput()" class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer" title="Pindutin para magsalita">
-                    <i class="fa-solid fa-microphone text-emerald-600"></i> <span id="micBtnText">Magsalita (Hal. "Bigas 250")</span>
-                </button>
+            <h2 class="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-emerald-600"></i> Magdagdag ng Item
+            </h2>
+
+            <!-- Quick Preset Buttons (Madaling Pindutin para sa Non-Techy) -->
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-gray-500 mb-2">Mabilis na Piliin (Presets):</label>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="setPreset('Bigas')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🌾 Bigas</button>
+                    <button type="button" onclick="setPreset('Itlog')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🥚 Itlog</button>
+                    <button type="button" onclick="setPreset('Kape')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">☕ Kape</button>
+                    <button type="button" onclick="setPreset('Asukal')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🧂 Asukal</button>
+                    <button type="button" onclick="setPreset('Gatas')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🥛 Gatas</button>
+                    <button type="button" onclick="setPreset('Mantika')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🍳 Mantika</button>
+                    <button type="button" onclick="setPreset('Tinapay')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🍞 Tinapay</button>
+                    <button type="button" onclick="setPreset('Sabon')" class="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-md font-medium cursor-pointer transition-colors">🧼 Sabon</button>
+                </div>
             </div>
 
             <form id="itemForm" onsubmit="addItem(event)" class="space-y-4">
@@ -186,48 +195,10 @@
             } catch (e) {}
         }
 
-        // Voice Input with Name & Price Parsing (e.g. "Bigas 250")
-        function startVoiceInput() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Ang iyong browser ay hindi sumusuporta sa Voice Input.");
-                return;
-            }
-
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'fil-PH';
-            
-            const micBtnText = document.getElementById('micBtnText');
-            micBtnText.innerText = "Nakikinig na...";
-
-            recognition.onresult = (event) => {
-                const speechText = event.results[0][0].transcript.trim();
-                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
-                
-                const words = speechText.split(' ');
-                const lastWord = words[words.length - 1];
-
-                if (!isNaN(lastWord) && words.length > 1) {
-                    const price = parseFloat(lastWord);
-                    words.pop();
-                    const name = words.join(' ');
-                    
-                    document.getElementById('itemName').value = name.charAt(0).toUpperCase() + name.slice(1);
-                    document.getElementById('itemPrice').value = price;
-                } else {
-                    document.getElementById('itemName').value = speechText.charAt(0).toUpperCase() + speechText.slice(1);
-                }
-            };
-
-            recognition.onerror = () => {
-                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
-            };
-
-            recognition.onend = () => {
-                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
-            };
-
-            recognition.start();
+        // Preset button helper
+        function setPreset(itemName) {
+            document.getElementById('itemName').value = itemName;
+            document.getElementById('itemPrice').focus();
         }
 
         function promptBudget() {
