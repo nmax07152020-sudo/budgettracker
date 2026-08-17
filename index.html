@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Budget Tracker</title>
+    
+    <!-- PWA Manifest & Theme Color -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#059669">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
+
+    <!-- Container -->
+    <div class="max-w-3xl mx-auto p-4 sm:p-6">
+        
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-emerald-600 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-cart-shopping"></i> Grocery Budget Tracker
+            </h1>
+            <p class="text-sm text-gray-500">I-track ang iyong gastusin at i-snap ang mga price tag!</p>
+			<p class="text-sm text-gray-500">Coded by: Erwin R. Alincastre, RN</p>
+            
+            <!-- Reset Button -->
+            <button onclick="clearAllData()" class="mt-4 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-full font-medium transition-colors cursor-pointer">
+                <i class="fa-solid fa-trash"></i> Reset (Clear All)
+            </button>
+        </header>
+
+        <!-- Budget & Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div class="flex justify-between items-center text-gray-500 text-sm mb-1">
+                    <span>Kabuuang Budget</span>
+                    <button onclick="editBudget()" class="text-emerald-600 hover:text-emerald-700 text-xs font-semibold cursor-pointer">
+                        <i class="fa-solid fa-pen"></i> Palitan
+                    </button>
+                </div>
+                <div class="text-xl sm:text-2xl font-bold text-gray-900" id="displayBudget">₱0.00</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="text-gray-500 text-sm mb-1">Kabuuang Gastos</div>
+                <div class="text-xl sm:text-2xl font-bold text-amber-600" id="displayTotalSpent">₱0.00</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="text-gray-500 text-sm mb-1">Natitirang Pera</div>
+                <div class="text-xl sm:text-2xl font-bold text-emerald-600" id="displayRemaining">₱0.00</div>
+            </div>
+        </div>
+
+        <!-- Add Item Form -->
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-emerald-600"></i> Magdagdag ng Item
+                </h2>
+                <!-- Voice Assistant Button -->
+                <button type="button" onclick="startVoiceInput()" class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer" title="Pindutin para magsalita">
+                    <i class="fa-solid fa-microphone text-emerald-600"></i> <span id="micBtnText">Magsalita (Hal. "Bigas 250")</span>
+                </button>
+            </div>
+
+            <form id="itemForm" onsubmit="addItem(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Pangalan ng Item</label>
+                        <input type="text" id="itemName" required placeholder="Hal. Bigas, Itlog, Gatas" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Presyo (₱)</label>
+                        <input type="number" step="0.01" id="itemPrice" required placeholder="0.00" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Picture ng Price Tag (Opsyonal)</label>
+                    <div class="flex items-center gap-3">
+                        <label class="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 text-sm text-gray-600">
+                            <i class="fa-solid fa-camera text-emerald-600"></i>
+                            <span id="fileLabel">Kumuha ng Larawan / Mag-upload</span>
+                            <input type="file" id="itemImage" accept="image/*" capture="environment" class="hidden" onchange="previewImage(this)">
+                        </label>
+                        <button type="button" id="removeImgBtn" onclick="clearImage()" class="hidden text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1">
+                            Tanggalin
+                        </button>
+                    </div>
+                    <div id="imagePreviewContainer" class="hidden mt-2">
+                        <img id="imagePreview" src="" alt="Price Tag Preview" class="h-20 w-20 object-cover rounded-lg border border-gray-200">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors text-sm cursor-pointer shadow-sm">
+                    Idagdag sa Listahan
+                </button>
+            </form>
+        </div>
+
+        <!-- Item List Section -->
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-emerald-600"></i> Listahan ng mga Gastusin
+                </h2>
+                <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium" id="itemCount">0 items</span>
+            </div>
+
+            <div id="emptyState" class="text-center py-8 text-gray-400">
+                <i class="fa-solid fa-basket-shopping text-3xl mb-2"></i>
+                <p class="text-sm">Wala pang nakatalang item.</p>
+            </div>
+
+            <div id="tableContainer" class="hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-xs text-gray-500 uppercase bg-gray-50">
+                            <th class="py-3 px-3">Price Tag</th>
+                            <th class="py-3 px-3">Pangalan ng Item</th>
+                            <th class="py-3 px-3 text-right">Presyo</th>
+                            <th class="py-3 px-3 text-center">Aksyon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemList" class="divide-y divide-gray-100 text-sm"></tbody>
+                    <tfoot>
+                        <tr class="border-t-2 border-gray-200 font-bold bg-gray-50/50">
+                            <td colspan="2" class="py-3 px-3 text-right text-gray-700">Kabuuang Halaga:</td>
+                            <td class="py-3 px-3 text-right text-amber-600" id="tableTotalSpent">₱0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50" onclick="closeModal()">
+        <div class="relative max-w-full max-h-full">
+            <img id="modalImage" src="" class="max-h-[80vh] max-w-full rounded-lg shadow-lg">
+            <button class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let budget = 0;
+        let items = [];
+        let currentImageBase64 = null;
+
+        window.onload = function() {
+            promptBudget();
+            loadFromStorage();
+            updateUI();
+            registerServiceWorker();
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(console.error);
+            }
+        }
+
+        // Haptic Feedback & Audio Beep
+        function triggerFeedback() {
+            if (navigator.vibrate) navigator.vibrate(100);
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = context.createOscillator();
+                oscillator.connect(context.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, context.currentTime);
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.1);
+            } catch (e) {}
+        }
+
+        // Voice Input with Name & Price Parsing (e.g. "Bigas 250")
+        function startVoiceInput() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Ang iyong browser ay hindi sumusuporta sa Voice Input.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'fil-PH';
+            
+            const micBtnText = document.getElementById('micBtnText');
+            micBtnText.innerText = "Nakikinig na...";
+
+            recognition.onresult = (event) => {
+                const speechText = event.results[0][0].transcript.trim();
+                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
+                
+                const words = speechText.split(' ');
+                const lastWord = words[words.length - 1];
+
+                if (!isNaN(lastWord) && words.length > 1) {
+                    const price = parseFloat(lastWord);
+                    words.pop();
+                    const name = words.join(' ');
+                    
+                    document.getElementById('itemName').value = name.charAt(0).toUpperCase() + name.slice(1);
+                    document.getElementById('itemPrice').value = price;
+                } else {
+                    document.getElementById('itemName').value = speechText.charAt(0).toUpperCase() + speechText.slice(1);
+                }
+            };
+
+            recognition.onerror = () => {
+                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
+            };
+
+            recognition.onend = () => {
+                micBtnText.innerText = "Magsalita (Hal. 'Bigas 250')";
+            };
+
+            recognition.start();
+        }
+
+        function promptBudget() {
+            let savedBudget = localStorage.getItem('grocery_budget');
+            if (savedBudget !== null) {
+                budget = parseFloat(savedBudget);
+            } else {
+                let input = prompt("Magkano ang iyong kabuuang grocery budget (₱)?", "1500");
+                if (input !== null && !isNaN(input)) {
+                    budget = parseFloat(input);
+                    localStorage.setItem('grocery_budget', budget);
+                }
+            }
+            updateUI();
+        }
+
+        function editBudget() {
+            let input = prompt("I-update ang iyong kabuuang budget (₱):", budget);
+            if (input !== null && !isNaN(input)) {
+                budget = parseFloat(input);
+                localStorage.setItem('grocery_budget', budget);
+                updateUI();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm("Sigurado ka bang gusto mong burahin ang lahat ng items at i-reset ang budget?")) {
+                items = [];
+                budget = 0;
+                localStorage.removeItem('grocery_items');
+                localStorage.removeItem('grocery_budget');
+                updateUI();
+                promptBudget();
+            }
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentImageBase64 = e.target.result;
+                    document.getElementById('imagePreview').src = currentImageBase64;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    document.getElementById('fileLabel').innerText = input.files[0].name.substring(0, 15) + '...';
+                    document.getElementById('removeImgBtn').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearImage() {
+            currentImageBase64 = null;
+            document.getElementById('itemImage').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('fileLabel').innerText = 'Kumuha ng Larawan / Mag-upload';
+            document.getElementById('removeImgBtn').classList.add('hidden');
+        }
+
+        function addItem(e) {
+            e.preventDefault();
+            const name = document.getElementById('itemName').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+            
+            items.push({ id: Date.now(), name, price, image: currentImageBase64 });
+            saveToStorage();
+            
+            triggerFeedback();
+            
+            document.getElementById('itemForm').reset();
+            clearImage();
+            updateUI();
+        }
+
+        function deleteItem(id) {
+            items = items.filter(item => item.id !== id);
+            saveToStorage();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('displayBudget').innerText = '₱' + budget.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const totalSpent = items.reduce((sum, item) => sum + item.price, 0);
+            const formattedTotal = '₱' + totalSpent.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('displayTotalSpent').innerText = formattedTotal;
+            document.getElementById('tableTotalSpent').innerText = formattedTotal;
+            
+            const remaining = budget - totalSpent;
+            const remainingEl = document.getElementById('displayRemaining');
+            remainingEl.innerText = '₱' + remaining.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            remainingEl.className = remaining < 0 ? 'text-xl sm:text-2xl font-bold text-red-600' : 'text-xl sm:text-2xl font-bold text-emerald-600';
+
+            const itemListEl = document.getElementById('itemList');
+            const tableContainerEl = document.getElementById('tableContainer');
+            document.getElementById('itemCount').innerText = items.length + (items.length === 1 ? ' item' : ' items');
+            
+            if (items.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                tableContainerEl.classList.add('hidden');
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                tableContainerEl.classList.remove('hidden');
+                itemListEl.innerHTML = items.slice().reverse().map(item => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="py-3 px-3">${item.image ? `<img src="${item.image}" onclick="openModal('${item.image}')" class="w-10 h-10 object-cover rounded-md cursor-pointer">` : `<div class="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs"><i class="fa-solid fa-image"></i></div>`}</td>
+                        <td class="py-3 px-3 font-medium text-gray-800">${escapeHtml(item.name)}</td>
+                        <td class="py-3 px-3 text-right font-semibold text-emerald-600">₱${item.price.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="py-3 px-3 text-center"><button onclick="deleteItem(${item.id})" class="text-gray-400 hover:text-red-500 p-1.5 cursor-pointer"><i class="fa-solid fa-trash-can text-sm"></i></button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openModal(imgSrc) {
+            document.getElementById('modalImage').src = imgSrc;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.getElementById('imageModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        function saveToStorage() { localStorage.setItem('grocery_items', JSON.stringify(items)); }
+        function loadFromStorage() {
+            const savedItems = localStorage.getItem('grocery_items');
+            if (savedItems) items = JSON.parse(savedItems);
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
