@@ -14,11 +14,9 @@
 
             if (isMessenger) {
                 if (isAndroid) {
-                    // Otomatikong ililipat sa Chrome sa Android
                     const currentUrl = window.location.href.replace(/^https?:\/\//, '');
                     window.location.href = "intent://" + currentUrl + "#Intent;scheme=https;package=com.android.chrome;end;";
                 } else {
-                    // Magpapakita ng notice banner kapag iOS (iPhone)
                     window.addEventListener("DOMContentLoaded", function() {
                         const banner = document.getElementById("messenger-notice");
                         if (banner) banner.classList.remove("hidden");
@@ -42,7 +40,7 @@
 
     <!-- Notice Banner para sa iOS Messenger Users -->
     <div id="messenger-notice" class="hidden bg-amber-100 border-b border-amber-300 text-amber-900 text-xs sm:text-sm text-center p-3 font-medium sticky top-0 z-50 shadow-sm">
-        ⚠️ <strong>Naka-open sa Messenger:</strong> Para ma-edit at ma-save nang maayos ang presyo, i-click ang <strong>3 dots (...)</strong> sa kanang itaas at piliin ang <u>"Open in Safari / External Browser"</u>.
+        ⚠️ <strong>Naka-open sa Messenger:</strong> Para sa pinakamagandang experience, i-click ang <strong>3 dots (...)</strong> sa kanang itaas at piliin ang <u>"Open in Safari / External Browser"</u>.
     </div>
 
     <!-- Container -->
@@ -57,7 +55,7 @@
             <p class="text-sm text-gray-500">Coded by : Erwin R. Alincastre</p>
             
             <!-- Reset Button -->
-            <button onclick="clearAllData()" class="mt-4 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-full font-medium transition-colors cursor-pointer">
+            <button onclick="openResetModal()" class="mt-4 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-full font-medium transition-colors cursor-pointer">
                 <i class="fa-solid fa-trash"></i> Reset (Clear All)
             </button>
         </header>
@@ -67,7 +65,7 @@
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
                 <div class="flex justify-between items-center text-gray-500 text-sm mb-1">
                     <span>Kabuuang Budget</span>
-                    <button onclick="editBudget()" class="text-emerald-600 hover:text-emerald-700 text-xs font-semibold cursor-pointer">
+                    <button onclick="openBudgetModal()" class="text-emerald-600 hover:text-emerald-700 text-xs font-semibold cursor-pointer">
                         <i class="fa-solid fa-pen"></i> Palitan
                     </button>
                 </div>
@@ -91,7 +89,7 @@
                 <i class="fa-solid fa-circle-plus text-emerald-600"></i> Magdagdag ng Item
             </h2>
 
-            <!-- Quick Preset Buttons (Madaling Pindutin para sa Non-Techy) -->
+            <!-- Quick Preset Buttons -->
             <div class="mb-4">
                 <label class="block text-xs font-medium text-gray-500 mb-2">Mabilis na Piliin (Presets):</label>
                 <div class="flex flex-wrap gap-1.5">
@@ -180,6 +178,31 @@
         </div>
     </div>
 
+    <!-- Custom Budget Modal (Pumapalit sa prompt) -->
+    <div id="budgetModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Ilagay ang Budget</h3>
+            <p class="text-xs text-gray-500 mb-4">Magkano ang iyong kabuuang grocery budget (₱)?</p>
+            <input type="number" id="budgetInputModal" step="0.01" inputmode="decimal" placeholder="1500" class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeBudgetModal()" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">Kanselahin</button>
+                <button onclick="saveBudgetFromModal()" class="px-4 py-1.5 text-xs bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700">I-save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Reset Modal (Pumapalit sa confirm) -->
+    <div id="resetModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Sigurado ka ba?</h3>
+            <p class="text-xs text-gray-500 mb-4">Mawawala ang lahat ng iyong nakatalang items at mai-reset ang budget.</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeResetModal()" class="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">Kanselahin</button>
+                <button onclick="confirmResetAll()" class="px-4 py-1.5 text-xs bg-red-600 text-white font-medium rounded-lg hover:bg-red-700">Burahin Lahat</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50" onclick="closeModal()">
         <div class="relative max-w-full max-h-full">
@@ -197,8 +220,8 @@
         let currentImageBase64 = null;
 
         window.onload = function() {
-            promptBudget();
             loadFromStorage();
+            checkBudgetInitial();
             updateUI();
             registerServiceWorker();
         }
@@ -209,7 +232,6 @@
             }
         }
 
-        // Haptic Feedback & Audio Beep
         function triggerFeedback() {
             if (navigator.vibrate) navigator.vibrate(100);
             try {
@@ -223,44 +245,64 @@
             } catch (e) {}
         }
 
-        // Preset button helper
         function setPreset(itemName) {
             document.getElementById('itemName').value = itemName;
             document.getElementById('itemPrice').focus();
         }
 
-        function promptBudget() {
+        // --- CUSTOM MODAL HANDLERS (Gumagana sa Messenger) ---
+        function checkBudgetInitial() {
             let savedBudget = localStorage.getItem('grocery_budget');
             if (savedBudget !== null) {
                 budget = parseFloat(savedBudget);
             } else {
-                let input = prompt("Magkano ang iyong kabuuang grocery budget (₱)?", "1500");
-                if (input !== null && !isNaN(input)) {
-                    budget = parseFloat(input);
-                    localStorage.setItem('grocery_budget', budget);
-                }
+                openBudgetModal();
             }
-            updateUI();
         }
 
-        function editBudget() {
-            let input = prompt("I-update ang iyong kabuuang budget (₱):", budget);
-            if (input !== null && !isNaN(input)) {
-                budget = parseFloat(input);
+        function openBudgetModal() {
+            document.getElementById('budgetInputModal').value = budget || '';
+            const modal = document.getElementById('budgetModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeBudgetModal() {
+            const modal = document.getElementById('budgetModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveBudgetFromModal() {
+            const val = parseFloat(document.getElementById('budgetInputModal').value);
+            if (!isNaN(val) && val >= 0) {
+                budget = val;
                 localStorage.setItem('grocery_budget', budget);
                 updateUI();
             }
+            closeBudgetModal();
         }
 
-        function clearAllData() {
-            if (confirm("Sigurado ka bang gusto mong burahin ang lahat ng items at i-reset ang budget?")) {
-                items = [];
-                budget = 0;
-                localStorage.removeItem('grocery_items');
-                localStorage.removeItem('grocery_budget');
-                updateUI();
-                promptBudget();
-            }
+        function openResetModal() {
+            const modal = document.getElementById('resetModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeResetModal() {
+            const modal = document.getElementById('resetModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmResetAll() {
+            items = [];
+            budget = 0;
+            localStorage.removeItem('grocery_items');
+            localStorage.removeItem('grocery_budget');
+            closeResetModal();
+            updateUI();
+            openBudgetModal();
         }
 
         function previewImage(input) {
