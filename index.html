@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grocery Budget Tracker</title>
     
+    <!-- Messenger In-App Browser Handling Script -->
+    <script>
+        (function checkMessengerWebView() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isMessenger = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
+            const isAndroid = /Android/i.test(ua);
+
+            if (isMessenger) {
+                if (isAndroid) {
+                    // Otomatikong ililipat sa Chrome sa Android
+                    const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+                    window.location.href = "intent://" + currentUrl + "#Intent;scheme=https;package=com.android.chrome;end;";
+                } else {
+                    // Magpapakita ng notice banner kapag iOS (iPhone)
+                    window.addEventListener("DOMContentLoaded", function() {
+                        const banner = document.getElementById("messenger-notice");
+                        if (banner) banner.classList.remove("hidden");
+                    });
+                }
+            }
+        })();
+    </script>
+    
     <!-- PWA Manifest & Theme Color -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#059669">
@@ -17,6 +40,11 @@
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
 
+    <!-- Notice Banner para sa iOS Messenger Users -->
+    <div id="messenger-notice" class="hidden bg-amber-100 border-b border-amber-300 text-amber-900 text-xs sm:text-sm text-center p-3 font-medium sticky top-0 z-50 shadow-sm">
+        ⚠️ <strong>Naka-open sa Messenger:</strong> Para ma-edit at ma-save nang maayos ang presyo, i-click ang <strong>3 dots (...)</strong> sa kanang itaas at piliin ang <u>"Open in Safari / External Browser"</u>.
+    </div>
+
     <!-- Container -->
     <div class="max-w-3xl mx-auto p-4 sm:p-6">
         
@@ -26,7 +54,7 @@
                 <i class="fa-solid fa-cart-shopping"></i> Grocery Budget Tracker
             </h1>
             <p class="text-sm text-gray-500">I-track ang iyong gastusin at i-snap ang mga price tag!</p>
-			<p class="text-sm text-gray-500">Coded by : Erwin R. Alincastre</p>
+            <p class="text-sm text-gray-500">Coded by : Erwin R. Alincastre</p>
             
             <!-- Reset Button -->
             <button onclick="clearAllData()" class="mt-4 text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-full font-medium transition-colors cursor-pointer">
@@ -87,7 +115,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 mb-1">Presyo (₱)</label>
-                        <input type="number" step="0.01" id="itemPrice" required placeholder="0.00" 
+                        <input type="number" step="0.01" inputmode="decimal" id="itemPrice" required placeholder="0.00" 
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                     </div>
                 </div>
